@@ -1,10 +1,16 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token, hash_password, verify_password
-from app.exceptions.user import UserAlreadyExistsError, UserOrPasswordError
+from app.exceptions.user import (
+    InvalidCurrentPasswordError,
+    UserAlreadyExistsError,
+    UserOrPasswordError,
+)
 from app.models.user import User
-from app.schemas.user import TokenResponse, UserCreate, UserLogin
+from app.schemas.user import PasswordChange, TokenResponse, UserCreate, UserLogin
 
 
 def create_user(db: Session, user_data: UserCreate) -> User:
@@ -38,7 +44,14 @@ def login(db: Session, user_data: UserLogin) -> TokenResponse:
 
     token = create_access_token(user.id)
 
-    return TokenResponse(
-            access_token=token,
-            token_type="bearer"
-            )
+    return TokenResponse(access_token=token, token_type="bearer")
+
+
+def change_password(db: Session, user: User, password_data: PasswordChange) -> None:
+    if not verify_password(password_data.current_password, user.password_hash):
+        raise InvalidCurrentPasswordError()
+
+    user.password_hash = hash_password(password_data.new_password)
+    user.password_changed_at = datetime.now(UTC)
+
+    db.commit()

@@ -73,4 +73,14 @@ def get_current_user(
     if user is None or not user.is_active:
         raise credentials_exception
 
+    iat = payload.get("iat")
+
+    if iat is None:
+        raise credentials_exception
+
+    issued_at: datetime = datetime.fromtimestamp(iat, tz=UTC)
+
+    if user.password_changed_at and issued_at < user.password_changed_at:
+        raise credentials_exception
+
     return user

@@ -1,3 +1,4 @@
+from time import timezone
 import uuid
 from datetime import datetime
 
@@ -42,6 +43,11 @@ class User(Base):
         default=True,
         nullable=False,
     )
+
+    password_changed_at: Mapped[datetime | None] = mapped_column(
+            DateTime(timezone=True),
+            nullable=True
+            )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

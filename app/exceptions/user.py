@@ -4,3 +4,7 @@ class UserAlreadyExistsError(Exception):
 
 class UserOrPasswordError(Exception):
     pass
+
+
+class InvalidCurrentPasswordError(Exception):
+    pass

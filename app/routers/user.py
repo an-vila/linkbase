@@ -1,12 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.exceptions.user import UserAlreadyExistsError, UserOrPasswordError
+from app.exceptions.user import (
+    InvalidCurrentPasswordError,
+    UserAlreadyExistsError,
+    UserOrPasswordError,
+)
 from app.models.user import User
-from app.schemas.user import TokenResponse, UserCreate, UserLogin, UserResponse
+from app.schemas.user import (
+    PasswordChange,
+    TokenResponse,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+)
+from app.services.user import change_password as change_password_service
 from app.services.user import (
     create_user as create_user_service,
 )
@@ -48,3 +58,21 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
         )
 
     return token_response
+
+
+@router.post("/auth/change-password")
+def change_password(
+    password_data: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        change_password_service(db, current_user, password_data)
+    except InvalidCurrentPasswordError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Current password does not match"
+        )
+
+    return HTTPException(
+        status.HTTP_204_NO_CONTENT, detail="Password changed successfully"
+    )

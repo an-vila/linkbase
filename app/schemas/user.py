@@ -1,3 +1,4 @@
+from calendar import c
 import uuid
 from datetime import datetime
 
@@ -35,4 +36,13 @@ class TokenResponse(BaseModel):
 
 class PasswordChange(BaseModel):
     current_password: str
+    new_password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class NewPasswordRequest(BaseModel):
+    token: str
     new_password: str

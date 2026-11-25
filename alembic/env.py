@@ -6,6 +6,7 @@ from alembic import context
 from app.core.base import Base
 from app.core.config import settings
 from app.models.user import User
+from app.models.password_reset_token import PasswordResetToken
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

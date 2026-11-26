@@ -30,17 +30,19 @@ from app.services.user import (
 )
 from app.services.user import reset_password as reset_password_service
 
-router = APIRouter()
+router = APIRouter(prefix="/users",
+                   tags=["Auth"]
+                   )
 
 
-@router.get("/users/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse)
 def get_user(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     return current_user
 
 
-@router.post("/users", response_model=UserResponse)
+@router.post("", response_model=UserResponse)
 def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
@@ -54,7 +56,7 @@ def create_user(
     return new_user
 
 
-@router.post("/auth/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse)
 def login(user_data: UserLogin, db: Session = Depends(get_db)):
     try:
         token_response = login_user_service(db, user_data)
@@ -66,7 +68,7 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     return token_response
 
 
-@router.post("/auth/change-password")
+@router.post("/change-password")
 def change_password(
     password_data: PasswordChange,
     db: Session = Depends(get_db),
@@ -83,7 +85,7 @@ def change_password(
     return {"message": "Password changed successfully"}
 
 
-@router.post("/auth/forgot-password")
+@router.post("/forgot-password")
 def forgot_password(user_data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     forgot_password_service(db, user_data)
 
@@ -92,7 +94,7 @@ def forgot_password(user_data: ForgotPasswordRequest, db: Session = Depends(get_
     }
 
 
-@router.post("/auth/reset-password")
+@router.post("/reset-password")
 def reset_password(
     new_password_request: NewPasswordRequest, db: Session = Depends(get_db)
 ):
@@ -100,7 +102,8 @@ def reset_password(
         reset_password_service(db, new_password_request)
     except InvalidPasswordResetTokenError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
         )
 
     return {"message": "Password reset successfully"}
